@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	// "ads-b-geom-parser/metrics"
 )
 
 type GeoJSONGeometry struct {
@@ -20,6 +22,9 @@ type GeoJSONFeature struct {
 
 
 func ParseTraceIntoGeoJSON(traceJson trace.PlaneTrace) GeoJSONFeature {
+	// defer metrics.TrackPerformance()()
+
+
 	coordinates := make([][]float64, 0, len(traceJson.Trace))
 	for _, pt := range traceJson.Trace {
 		coord := []float64{
