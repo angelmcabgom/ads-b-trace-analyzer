@@ -164,6 +164,10 @@ func processFile(path, outDir string, runAnalysis bool) {
 		if analysis.DetectGoAround(flightData.Trace) {
 			fmt.Printf("Go-around detected in: %s\n", path)
 		}
+
+		if analysis.DetectTakeOff(flightData.Trace) {
+			fmt.Printf("Takeoff detected")
+		}
 	}
 
 	geoJsonFeature := geojson.ParseTraceIntoGeoJSON(flightData)

@@ -27,12 +27,12 @@ func DetectTakeOff(points []trace.TracePoint) bool {
         if climbing {
             consecutiveClimbs++
             if consecutiveClimbs >= 3 {
-				fmt.Printf("takeoff detected omg!!")
                 return true
             }
         } else {
             consecutiveClimbs = 0
         }
     }
+
     return false
 }
