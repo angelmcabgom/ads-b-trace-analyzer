@@ -30,7 +30,7 @@ type TracePoint struct {
     TimeOffset     float64
     Latitude       float32
     Longitude      float32
-    Altitude       int
+    Altitude       int        
     Track          float64
     GroundSpeed    float64
     Unknown6       int
