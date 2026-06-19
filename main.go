@@ -168,6 +168,10 @@ func processFile(path, outDir string, runAnalysis bool) {
 		if analysis.DetectTakeOff(flightData.Trace) {
 			fmt.Printf("Takeoff detected")
 		}
+
+		if analysis.DetectLanding(flightData.Trace) {
+			fmt.Printf("Landing detected")
+		}
 	}
 
 	geoJsonFeature := geojson.ParseTraceIntoGeoJSON(flightData)
