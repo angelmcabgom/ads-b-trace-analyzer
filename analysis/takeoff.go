@@ -2,7 +2,6 @@ package analysis
 
 import (
 	"ads-b-geom-parser/trace"
-	"fmt"
 )
 
 func DetectTakeOff(points []trace.TracePoint) bool {
