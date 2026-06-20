@@ -83,7 +83,7 @@ func loadTraceData(path string) (trace.PlaneTrace, error) {
 func main() {
 	defer metrics.TrackPerformance()()
 	runAnalysis := flag.Bool("analyze", true, "Execute flight behavior analysis")
-	outDir := flag.String("out", "output", "Directory to save GeoJSON files")
+	outDir := flag.String("out", "", "Directory to save GeoJSON files")
 	inputPath := flag.String("in", "traces", "Path to a single file or directory")
 	runMigrationsFlag := flag.Bool("migration", false, "Excute migrations")
 
@@ -111,7 +111,7 @@ func main() {
 		)
 
 		db, err := sql.Open("postgres", connStr)
-		
+
 		if err != nil {
 			log.Fatalf("could not connect to db: %v", err)
 		}
@@ -120,7 +120,7 @@ func main() {
 	}
 
 	if err := os.MkdirAll(*outDir, 0755); err != nil {
-		log.Fatalf("Could not create output directory: %v", err)
+		log.Printf("Could not create output directory: %v", err)
 	}
 
 	info, err := os.Stat(*inputPath)
@@ -166,20 +166,23 @@ func processFile(path, outDir string, runAnalysis bool) {
 		}
 
 		if analysis.DetectTakeOff(flightData.Trace) {
-			fmt.Printf("Takeoff detected")
+			fmt.Printf("Takeoff detected\n")
 		}
 
 		if analysis.DetectLanding(flightData.Trace) {
-			fmt.Printf("Landing detected")
+			fmt.Printf("Landing detected\n")
 		}
 	}
 
-	geoJsonFeature := geojson.ParseTraceIntoGeoJSON(flightData)
+	if len(outDir) > 0 {
+		geoJsonFeature := geojson.ParseTraceIntoGeoJSON(flightData)
 
-	filename := filepath.Base(path)
-	savePath := filepath.Join(outDir, strings.TrimSuffix(filename, ".json")+".geojson")
+		filename := filepath.Base(path)
+		savePath := filepath.Join(outDir, strings.TrimSuffix(filename, ".json")+".geojson")
 
-	if err := geojson.SaveFile(savePath, geoJsonFeature); err != nil {
-		log.Printf("Failed to save %s: %v", savePath, err)
+		if err := geojson.SaveFile(savePath, geoJsonFeature); err != nil {
+			log.Printf("Failed to save %s: %v", savePath, err)
+		}
+
 	}
 }

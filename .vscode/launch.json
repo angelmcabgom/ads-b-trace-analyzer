@@ -6,7 +6,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${fileDirname}",
+            "program": "${workspaceFolder}",
             "cwd": "${workspaceFolder}",
             "args": [
                 "-analyze=true",
@@ -14,11 +14,23 @@
             ]
         },
         {
+            "name": "Launch analysis for landing dataset",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "-in=mock/trace-landing.mock.json",
+                "-analyze=true",
+            ]
+        },
+        {
             "name": "Launch Flight Parser (Skip Analysis)",
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${fileDirname}",
+            "program": "${workspaceFolder}",
             "cwd": "${workspaceFolder}",
             "args": [
                 "-analyze=false",
