@@ -10,7 +10,8 @@
             "cwd": "${workspaceFolder}",
             "args": [
                 "-analyze=true",
-                "-out=flight_track.geojson"
+                "-in=mock/trace-landing.mock.json",
+                "-out=output/flight_track.geojson"
             ]
         },
         {
