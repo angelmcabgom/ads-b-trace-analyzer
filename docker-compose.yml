@@ -4,7 +4,7 @@ services:
     container_name: adsb_db
     restart: always
     env_file:
-      - ../envs/.local.env
+      - envs/.local.env
       # - .env
     environment:
       POSTGRES_USER: ${DB_USER}

@@ -2,3 +2,4 @@ output/*
 envs/*
 !envs/.example.env
 docker/pgdata
+pgdata
