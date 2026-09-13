@@ -5,12 +5,9 @@ services:
     restart: always
     env_file:
       - envs/.local.env
-      # - .env
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
-      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "${DB_PORT}:5432"
+      # HOST PORT, CONTAINER PORT
+      - 5432:5432
     volumes:
+      # changed to a named volume and dev dir
       - ./pgdata:/var/lib/postgresql/data
