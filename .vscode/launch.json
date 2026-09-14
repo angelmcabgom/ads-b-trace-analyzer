@@ -37,6 +37,13 @@
                 "-analyze=false",
                 "-out=flight_track_no_analysis.geojson"
             ]
+        },
+        {
+            "name": "Launch Current File (Go)",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${file}",
         }
     ]
 }
