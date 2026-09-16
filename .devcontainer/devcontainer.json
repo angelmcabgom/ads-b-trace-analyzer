@@ -11,7 +11,8 @@
   },
   "remoteUser": "dev",
   "runArgs": [
-    "--cap-drop=ALL"
+    "--cap-drop=ALL",
+    "--network=ads-b-trace-analyzer_default"
   ],
   // Uncomment the following options to enable the debugger.
   // "capAdd": ["SYS_PTRACE"],
