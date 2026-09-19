@@ -18,36 +18,44 @@ import (
 
 // need type for row
 
+type CoordsPoint struct {
+	Longitude float64 // X
+	Latitude  float64 // Y
+	Z         float64 // altitude, meters
+}
+
 type AirportRow struct {
 	id           int32
 	ident        string
 	airportType  string
 	name         string
 	location     CoordsPoint
-	elevation    int32
-	iso_country  string
+	elevationFt  int32
+	isoCountry   string
 	municipality string
-	icao_code    string
-	iata_code    string
+	icaoCode     string
+	iataCode     string
 }
 
-type CoordsPoint struct {
-	Latitude  float32
-	Longitude float32
-}
+const feetToMeters = 0.3048
 
 func main() {
 	start := time.Now()
-	rows := downloadAirportData()
+	rows := downloadAndParseAirportData()
 	dbConn := connectIntoDb()
-	insertIntoDb(rows, dbConn)
+	err := insertIntoDb(rows, dbConn)
+
+	if err != nil {
+		log.Fatalf("[main] Error when insert into DB: %s", err)
+	}
+
 	elapsed := time.Since(start)
 	// fmt.Print(len(rows))
 	fmt.Printf("Total time: %v\n", elapsed)
 }
 
 // can easily be refactored into a general download function
-func downloadAirportData() []AirportRow {
+func downloadAndParseAirportData() []AirportRow {
 	resp, err := http.Get("https://davidmegginson.github.io/ourairports-data/airports.csv")
 
 	if err != nil {
@@ -66,7 +74,12 @@ func downloadAirportData() []AirportRow {
 
 	airportRows := []AirportRow{}
 
-	// skip first row
+	_, err = reader.Read() // skip header row
+
+	if err != nil && err != io.EOF {
+		log.Fatalln(err)
+	}
+
 	for {
 		row, err := reader.Read()
 
@@ -77,20 +90,23 @@ func downloadAirportData() []AirportRow {
 			}
 		}
 
+		elevFt := parseInt32(row[6])
+
 		airportRows = append(airportRows, AirportRow{
 			id:          parseInt32(row[0]),
 			ident:       row[1],
 			airportType: row[2],
 			name:        row[3],
 			location: CoordsPoint{
-				Latitude:  parseFloat32(row[4]),
-				Longitude: parseFloat32(row[5]),
+				Longitude: parseFloat64(row[5]), // row[5] is lon
+				Latitude:  parseFloat64(row[4]), // row[4] is lat
+				Z:         float64(elevFt) * feetToMeters,
 			},
-			elevation:    parseInt32(row[6]),
-			iso_country:  row[8],
+			elevationFt:  elevFt,
+			isoCountry:   row[8],
 			municipality: row[10],
-			icao_code:    row[12],
-			iata_code:    row[13],
+			icaoCode:     row[12],
+			iataCode:     row[13],
 		})
 	}
 
@@ -114,6 +130,15 @@ func parseFloat32(s string) float32 {
 		fmt.Printf("Failed to parse float 32: %v", v)
 	}
 	return float32(v)
+}
+
+func parseFloat64(s string) float64 {
+	v, err := strconv.ParseFloat(s, 64)
+
+	if err != nil {
+		fmt.Printf("Failed to parse float 64: %v", v)
+	}
+	return float64(v)
 }
 
 func connectIntoDb() *sql.DB {
@@ -143,7 +168,6 @@ func connectIntoDb() *sql.DB {
 		log.Fatalf("Error after trying to connect to DB: %v", err)
 	}
 
-
 	err = db.Ping()
 
 	if err != nil {
@@ -153,20 +177,39 @@ func connectIntoDb() *sql.DB {
 	return db
 }
 
-func insertIntoDb(dataFrame []AirportRow, db *sql.DB) bool {
+func insertIntoDb(dataFrame []AirportRow, db *sql.DB) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() // no-op after a successful Commit
 
-	response, err := db.Query("select 1;")
+	stmt, err := tx.Prepare(`
+    INSERT INTO public.airports
+        (id, ident, "type", "name", "location", elevation_ft,
+         iso_country, municipality, icao_code, iata_code)
+    VALUES
+        ($1, $2, $3, $4, ST_SetSRID(ST_MakePoint($5, $6, $7), 4326), $8,
+         $9, $10, $11, $12)
+    ON CONFLICT (id) DO NOTHING`)
 
 	if err != nil {
-		log.Fatalf("Error when querying database: %v", err)
+		return err
 	}
 
-	defer response.Close()
+	defer stmt.Close()
 
-	fmt.Print(response)
+	for _, a := range dataFrame {
+		_, err := stmt.Exec(
+			a.id, a.ident, a.airportType, a.name,
+			a.location.Longitude, a.location.Latitude, a.location.Z,
+			a.elevationFt,
+			a.isoCountry, a.municipality, a.icaoCode, a.iataCode,
+		)
+		if err != nil {
+			return fmt.Errorf("inserting airport %d: %w", a.id, err)
+		}
+	}
 
-	// for _, airportRow := range dataFrame {
-	// }
-
-	return true
+	return tx.Commit()
 }
