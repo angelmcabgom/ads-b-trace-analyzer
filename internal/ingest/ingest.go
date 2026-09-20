@@ -51,37 +51,118 @@ func DownloadCSV(url string) *csv.Reader {
 	return reader
 }
 
+
+var parseFailures = map[string]int{}
+var parseSamples = map[string]string{}
+
+func recordParseFailure(kind, value string) {
+	if parseFailures[kind] == 0 {
+		parseSamples[kind] = value
+	}
+
+	parseFailures[kind]++
+}
+
+
+func ReportParseFailures(w io.Writer) {
+	for kind, count := range parseFailures {
+		fmt.Fprintf(w, "%s: %d unparseable values, first was %q\n", kind, count, parseSamples[kind])
+	}
+}
+
 func ParseInt32(s string) int32 {
+	if s == "" {
+		return 0
+	}
+
 	v, err := strconv.ParseInt(s, 10, 32)
 
 	if err != nil {
-		fmt.Printf("Failed to parse int 32: %v", v)
+		recordParseFailure("int32", s)
 	}
 
 	return int32(v)
 }
 
 func ParseFloat32(s string) float32 {
+	if s == "" {
+		return 0
+	}
+
 	v, err := strconv.ParseFloat(s, 32)
 
 	if err != nil {
-		fmt.Printf("Failed to parse float 32: %v", v)
+		recordParseFailure("float32", s)
 	}
+
 	return float32(v)
 }
 
 func ParseFloat64(s string) float64 {
+	if s == "" {
+		return 0
+	}
+
 	v, err := strconv.ParseFloat(s, 64)
 
 	if err != nil {
-		fmt.Printf("Failed to parse float 64: %v", v)
+		recordParseFailure("float64", s)
 	}
-	return float64(v)
+
+	return v
+}
+
+func ParseBool(s string) bool {
+	if s == "" {
+		return false
+	}
+
+	v, err := strconv.ParseBool(s)
+
+	if err != nil {
+		recordParseFailure("bool", s)
+	}
+
+	return v
+}
+
+func NullInt32(s string) sql.NullInt32 {
+	v, err := strconv.ParseInt(s, 10, 32)
+
+	if err != nil && s != "" {
+		recordParseFailure("int32", s)
+	}
+
+	return sql.NullInt32{Int32: int32(v), Valid: err == nil}
+}
+
+func NullFloat64(s string) sql.NullFloat64 {
+	v, err := strconv.ParseFloat(s, 64)
+
+	if err != nil && s != "" {
+		recordParseFailure("float64", s)
+	}
+
+	return sql.NullFloat64{Float64: v, Valid: err == nil}
+}
+
+func NullBool(s string) sql.NullBool {
+	v, err := strconv.ParseBool(s)
+
+	if err != nil && s != "" {
+		recordParseFailure("bool", s)
+	}
+
+	return sql.NullBool{Bool: v, Valid: err == nil}
+}
+
+func NullString(s string) sql.NullString {
+	return sql.NullString{String: s, Valid: s != ""}
 }
 
 // ConnectDB loads envs/.local.env (relative to the repo root) and opens a Postgres connection.
 func ConnectDB() *sql.DB {
-	err := godotenv.Load("envs/.local.env")
+	err := godotenv.Load("../../envs/.local.env")
 
 	if err != nil {
 		log.Fatalf("Error when connecting into db: %v", err)

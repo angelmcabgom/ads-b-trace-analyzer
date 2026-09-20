@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"time"
 
 	"ads-b-geom-parser/internal/ingest"
@@ -32,6 +33,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("[main] Error when insert into DB: %s", err)
 	}
+
+	ingest.ReportParseFailures(os.Stderr)
 
 	elapsed := time.Since(start)
 	// fmt.Print(len(rows))
