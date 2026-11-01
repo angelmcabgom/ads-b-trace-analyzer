@@ -32,8 +32,8 @@ type TracePoint struct {
 	Longitude      float32
 	Altitude       int
 	OnGround       bool
-	Track          float64
-	GroundSpeed    float64
+	GroundSpeed    float64 // knots
+	Track          float64 // degrees
 	Unknown6       int
 	VerticalRate   int
 	MetaData       *TraceMeta
@@ -57,9 +57,9 @@ func (tp *TracePoint) UnmarshalJSON(data []byte) error {
 		&tp.TimeOffset,
 		&tp.Latitude,
 		&tp.Longitude,
-		&rawAltitude, // mixed type handling ("ground", null, or int)
-		&tp.Track,
-		&tp.GroundSpeed,
+		&rawAltitude,    // mixed type handling ("ground", null, or int)
+		&tp.GroundSpeed, // readsb index 4
+		&tp.Track,       // readsb index 5
 		&tp.Unknown6,
 		&tp.VerticalRate,
 		&tp.MetaData,
