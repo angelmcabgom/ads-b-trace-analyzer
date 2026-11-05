@@ -27,21 +27,21 @@ type TraceMeta struct {
 }
 
 type TracePoint struct {
-	TimeOffset     float64
-	Latitude       float32
-	Longitude      float32
-	Altitude       int
-	OnGround       bool
-	GroundSpeed    float64 // knots
-	Track          float64 // degrees
-	Unknown6       int
-	VerticalRate   int
-	MetaData       *TraceMeta
-	PositionSource string
-	AltGeom        *float64
-	GeometricRate  int
-	Heading        *int
-	Roll           *float64
+	TimeOffset        float64
+	Latitude          float32
+	Longitude         float32
+	Altitude          int
+	OnGround          bool
+	GroundSpeed       float64 // knots
+	Track             float64 // degrees
+	Unknown6          int
+	VerticalRate      int
+	MetaData          *TraceMeta
+	PositionSource    string
+	AltGeom           *float64
+	GeometricRate     int
+	IndicatedAirspeed *int     // knots, readsb index 12
+	Roll              *float64 // degrees, readsb index 13
 }
 
 func (tp *TracePoint) UnmarshalJSON(data []byte) error {
@@ -66,8 +66,8 @@ func (tp *TracePoint) UnmarshalJSON(data []byte) error {
 		&tp.PositionSource,
 		&tp.AltGeom,
 		&tp.GeometricRate,
-		&tp.Heading,
-		&tp.Roll,
+		&tp.IndicatedAirspeed, // readsb index 12
+		&tp.Roll,              // readsb index 13
 	}
 
 	for i, field := range fields {
